@@ -10,31 +10,34 @@
 <meta property="og:title" content="Pour Aline ❤️">
 <meta property="og:description" content="J’ai quelque chose pour toi…">
 <meta property="og:type" content="website">
-<link rel="stylesheet" href="styles.css?v=4">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 <section id="intro" class="scene">
   <div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>
-  <div id="stars" class="stars"></div><div class="orbit"></div><div class="intro-vignette"></div>
-  <main class="intro-card">
+  <div id="stars" class="stars"></div><div class="orbit"></div><div class="intro-ribbon r1"></div><div class="intro-ribbon r2"></div><div class="intro-vignette"></div>
+  <main class="intro-card" id="introCard">
+    <div class="card-glow"></div>
     <div class="mini-tag">UNE PETITE SURPRISE POUR TOI</div>
-    <div class="hero-heart"><div class="ring"></div><div class="hshape"></div></div>
+    <div class="hero-heart" id="heroHeart"><div class="ring"></div><div class="ring ring2"></div><div class="hshape"></div><div class="heart-spark hs1"></div><div class="heart-spark hs2"></div><div class="heart-spark hs3"></div></div>
     <h1>Aline</h1>
     <p class="intro-sub">J’ai préparé quelque chose rien que pour toi.</p>
     <div class="giftline"><span class="dot"></span><span>CADEAU PRÊT À ÊTRE OUVERT</span></div>
-    <button id="open"><span class="btnshine"></span>Ouvrir mon cadeau ❤️</button>
+    <button id="open"><span class="btnshine"></span><span class="btnhalo"></span><span class="btntext">Ouvrir mon cadeau ❤️</span></button>
     <div class="tiny-note">Prends ton temps… enfin, au début.</div>
   </main>
 </section>
+<div id="infection" aria-hidden="true"><div class="infection-heart">♥</div><div class="infect-line"></div><div class="infect-noise"></div></div>
 <section id="pre" class="scene off"><div class="prebox"><div class="mono">OUVERTURE DU MESSAGE</div><div class="spinner"></div><div id="premsg">Chargement du message...</div></div></section>
 <section id="hack" class="scene off">
   <canvas id="rain" class="cv"></canvas><canvas id="stage" class="cv"></canvas><div class="grid"></div><div class="scan"></div><div class="noise"></div><div class="vig"></div><div id="flash"></div>
+  <div class="hud-frame"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i><span class="rail left"></span><span class="rail right"></span></div>
   <div class="top"><span>● SESSION SOUS SURVEILLANCE</span><span id="clock">00:00:00</span></div><div id="term" class="term"></div>
   <div id="profile" class="overlay"><div class="box"><div class="tag">PROFIL RÉGIONAL DÉTECTÉ</div><div class="pg"><div class="item"><span>LOCALISATION ESTIMÉE</span><strong>ROCHE, SUISSE 🇨🇭</strong></div><div class="item"><span>LANGUE</span><strong>FRANÇAIS · CH</strong></div><div class="item"><span>FUSEAU</span><strong>EUROPE / ZURICH</strong></div><div class="item"><span>STATUT</span><strong>ANALYSE ACTIVE</strong></div></div></div></div>
   <div id="ids" class="overlay"></div>
   <div id="big" class="overlay"><div id="b1" class="b1"></div><div id="b2" class="b2"></div><div id="b3" class="b3"></div></div>
   <div id="modal" class="overlay"><div class="box"><div id="mtag" class="tag"></div><div id="mtitle" class="titlebig"></div><div id="msub" class="sub"></div><div id="mbody"></div><div id="mreply" class="reply"></div></div></div>
-  <div id="reveal"><div class="core"></div><div class="crack"></div><div class="rname">Aline</div><div class="rsub">SIGNATURE RECONNUE · ACCÈS AU CŒUR AUTORISÉ</div></div>
+  <div id="reveal"><div class="reveal-halo h1"></div><div class="reveal-halo h2"></div><div class="core"></div><div class="crack"></div><div class="rname">Aline</div><div class="rsub">SIGNATURE RECONNUE · ACCÈS AU CŒUR AUTORISÉ</div></div>
   <div id="panel"><div id="pt" class="pt">SURVEILLANCE</div><div class="progress"><div id="bar" class="bar"></div></div><div id="px" class="px">En attente...</div></div>
 </section>
 <section id="final" class="scene off">
@@ -45,6 +48,6 @@
     <div class="sig">— Flo, avec tout mon cœur ❤️</div><button id="again" class="again">Rejouer la surprise</button>
   </main>
 </section>
-<script src="app.js?v=4" defer></script>
+<script src="app.js?v=5" defer></script>
 </body>
 </html>
