@@ -3,27 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#060711">
+  <meta name="theme-color" content="#07080d">
   <meta name="color-scheme" content="dark">
-  <meta name="build" content="V7-SIMPLE-20260823-1848">
+  <meta name="build" content="V9-MASTER-20260823-2247">
   <title>Pour Aline ✦</title>
-  <meta name="description" content="Trois petits jeux pour comprendre ce que Flo construit.">
+  <meta name="description" content="Trois mini-jeux pour comprendre simplement ce que Flo construit.">
   <meta property="og:title" content="Pour Aline ✦">
-  <meta property="og:description" content="Trois petits jeux. Rien à apprendre avant de commencer.">
+  <meta property="og:description" content="3 mini-jeux. 2 minutes. Rien à connaître avant de commencer.">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="styles.css?v=V7-SIMPLE-20260823-1848">
+  <style>html,body{margin:0;min-height:100%;background:#07080d;color:#f7fbff}</style>
+  <link rel="stylesheet" href="styles.css?v=V9-MASTER-20260823-2247">
 </head>
 <body>
-  <canvas id="fx" aria-hidden="true"></canvas>
-  <div class="glow" aria-hidden="true"></div>
-  <header id="top" class="top hidden">
-    <b>POUR ALINE</b>
-    <div class="steps" aria-label="Progression"><i></i><i></i><i></i></div>
-    <button id="sound" type="button">SON</button>
+  <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
+  <header id="miniHud" class="mini-hud hidden" aria-label="Progression">
+    <div class="progress-dots" aria-label="3 étapes"><i></i><i></i><i></i></div>
+    <button id="effectsToggle" class="icon-btn" type="button" aria-label="Réduire les effets" title="Effets visuels">✦</button>
   </header>
-  <main><section id="scene" class="scene" aria-live="polite"></section></main>
-  <aside id="guide" class="guide hidden" aria-live="polite"><span></span><p id="guideText"></p></aside>
+  <main id="app"><section id="scene" class="scene" aria-live="polite"></section></main>
   <div id="flash" class="flash" aria-hidden="true"></div>
-  <script src="game.js?v=V7-SIMPLE-20260823-1848" defer></script>
+  <script src="game.js?v=V9-MASTER-20260823-2247" defer></script>
 </body>
 </html>
