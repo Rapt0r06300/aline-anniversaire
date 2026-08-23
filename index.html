@@ -3,51 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#080b14">
+  <meta name="theme-color" content="#070a12">
   <meta name="color-scheme" content="dark">
-  <meta name="build" content="v4-20260823-1822">
-  <title>Le laboratoire de Flo ✦</title>
-  <meta name="description" content="Aline, une petite visite t’attend dans le laboratoire de Flo ✦">
-  <meta property="og:title" content="Le laboratoire de Flo ✦">
-  <meta property="og:description" content="Aline, une expérience a été préparée spécialement pour toi.">
+  <meta name="build" content="V5-20260823-1835">
+  <title>HyperSmart Lab — pour Aline ✦</title>
+  <meta name="description" content="Aline, entre dans le petit monde que Flo construit sur son ordinateur ✦">
+  <meta property="og:title" content="HyperSmart Lab — pour Aline ✦">
+  <meta property="og:description" content="Trois petits jeux pour comprendre le logiciel de Flo sans cours compliqué.">
   <meta property="og:type" content="website">
-  <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="wow-v2.css?v=4">
-  <link rel="stylesheet" href="visual-v3.css?v=4">
-  <link rel="stylesheet" href="first-impression-v4.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=V5-20260823-1835">
 </head>
 <body>
-  <canvas id="ambient" aria-hidden="true"></canvas>
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="aurora" aria-hidden="true"></div>
   <div class="grain" aria-hidden="true"></div>
 
-  <header id="hud" class="hud hidden" aria-label="Progression du jeu">
-    <div class="hud-brand"><span class="brand-orb"></span><span>HYPERSMART LAB</span></div>
-    <div class="hud-progress" aria-label="Progression">
-      <div class="progress-track"><span id="progressFill"></span></div>
-      <span id="progressText">0 / 5</span>
-    </div>
-    <button id="soundButton" class="icon-button" type="button" aria-label="Activer ou couper le son">SON</button>
+  <header id="hud" class="hud hidden">
+    <div class="brand"><span class="brand-dot"></span><span>HYPERSMART LAB</span></div>
+    <div class="hud-progress"><span id="progressFill"></span></div>
+    <span id="progressText">0 / 5</span>
+    <button id="qualityBtn" class="tiny-btn" type="button">AUTO</button>
+    <button id="soundBtn" class="tiny-btn" type="button">SON</button>
   </header>
 
-  <main id="app" class="app" aria-live="polite">
-    <section id="scene" class="scene"></section>
+  <main id="app" class="app">
+    <section id="scene" class="scene" aria-live="polite"></section>
   </main>
 
-  <aside id="aiGuide" class="ai-guide hidden" aria-live="polite">
-    <div class="ai-avatar" aria-hidden="true"><span></span></div>
-    <div class="ai-copy">
-      <small>TON GUIDE DU LABO</small>
-      <p id="aiText"></p>
-    </div>
+  <aside id="guide" class="guide hidden" aria-live="polite">
+    <div class="guide-orb"><span></span></div>
+    <div><small>TON GUIDE DU LABO</small><p id="guideText"></p></div>
   </aside>
 
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="portal" class="portal" aria-hidden="true"><div class="portal-ring"></div><div class="portal-copy"><small>PROCHAIN JEU</small><b id="portalTitle">LABORATOIRE</b></div></div>
+  <div id="toast" class="toast" role="status"></div>
   <div id="flash" class="flash" aria-hidden="true"></div>
 
-  <script src="game.js?v=4" defer></script>
-  <script src="wow-v2.js?v=4" defer></script>
-  <script src="clarity-v3.js?v=4" defer></script>
-  <script src="visual-v3.js?v=4" defer></script>
-  <script src="first-impression-v4.js?v=4" defer></script>
+  <script src="game.js?v=V5-20260823-1835" defer></script>
 </body>
 </html>
