@@ -1,67 +1,40 @@
 (()=>{'use strict';
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const scene=$('#scene'),top=$('#top'),guide=$('#guide'),guideText=$('#guideText'),sound=$('#sound'),flash=$('#flash');
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const state={sound:false,step:0,leadOpen:false};let audio=null,leadTimer=null;
-function render(html,theme=''){document.body.classList.toggle('theme-love',theme==='love');scene.innerHTML=html;scene.style.animation='none';void scene.offsetWidth;scene.style.animation='';window.scrollTo(0,0)}
-function progress(n){state.step=n;top.classList.toggle('hidden',n===0);$$('.steps i').forEach((d,i)=>d.classList.toggle('on',i<n))}
-function ac(){if(!state.sound)return null;try{const A=window.AudioContext||window.webkitAudioContext;if(!audio&&A)audio=new A();if(audio&&audio.state==='suspended')audio.resume();return audio}catch(_){return null}}
-function tone(f=420,d=.16,v=.007){const a=ac();if(!a)return;const o=a.createOscillator(),g=a.createGain(),t=a.currentTime;o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(a.destination);o.start();o.stop(t+d+.03)}
-function ok(){flash.classList.remove('on');void flash.offsetWidth;flash.classList.add('on');tone(560,.12);setTimeout(()=>tone(760,.16),70);try{navigator.vibrate&&navigator.vibrate(12)}catch(_){}}
-async function say(t,ms=2100){guideText.textContent=t;guide.classList.remove('hidden');await sleep(ms);guide.classList.add('hidden')}
-function button(txt,id='next'){return `<button class="primary" id="${id}" type="button">${txt}</button>`}
-sound.onclick=()=>{state.sound=!state.sound;sound.textContent=state.sound?'SON ✓':'SON';if(state.sound){ac();tone(500,.12)}};
+const BUILD='V9-MASTER-20260823-2247';
+const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
+const scene=$('#scene'),hud=$('#miniHud'),flash=$('#flash'),effectsToggle=$('#effectsToggle');
+const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
+const state={step:0,locked:false,fluid:false,leadRound:0,leadActive:false};
+const timers=new Set();
+function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn()},ms);timers.add(id);return id}
+function wait(ms){return new Promise(resolve=>later(resolve,ms))}
+function clearTimers(){for(const id of timers)clearTimeout(id);timers.clear();state.leadActive=false;state.locked=false}
+function setProgress(n){state.step=n;hud.classList.toggle('hidden',n===0);$$('.progress-dots i').forEach((d,i)=>d.classList.toggle('on',i<n))}
+function render(html,{final=false}={}){clearTimers();document.body.classList.toggle('finale-mode',final);scene.innerHTML=`<div class="shell scene-in">${html}</div>`;window.scrollTo({top:0,behavior:'auto'});requestAnimationFrame(()=>scene.querySelector('button:not([disabled])')?.focus({preventScroll:true}))}
+function button(label,id='next'){return `<button class="primary" id="${id}" type="button">${label}</button>`}
+function success(){flash.classList.remove('on');void flash.offsetWidth;flash.classList.add('on');try{navigator.vibrate?.(12)}catch(_){}}
+function safeBind(id,fn){const el=$('#'+id);if(!el)return;el.onclick=async()=>{if(state.locked||el.disabled)return;state.locked=true;el.disabled=true;try{await fn()}finally{state.locked=false;if(document.body.contains(el))el.disabled=false}}}
+async function transition(fn){if(reduced){fn();return}scene.style.opacity='.48';scene.style.transform='translateY(4px)';await wait(180);scene.style.opacity='';scene.style.transform='';fn()}
+effectsToggle.onclick=()=>{state.fluid=!state.fluid;document.documentElement.classList.toggle('effects-fluid',state.fluid);effectsToggle.textContent=state.fluid?'·':'✦';effectsToggle.setAttribute('aria-label',state.fluid?'Réactiver les effets automatiques':'Réduire les effets')};
 
-/* décor canvas, volontairement discret */
-const canvas=$('#fx'),ctx=canvas.getContext('2d');let W=0,H=0,D=1,p=[];
-function resize(){W=innerWidth;H=innerHeight;D=Math.min(devicePixelRatio||1,1.5);canvas.width=W*D;canvas.height=H*D;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(D,0,0,D,0,0);const n=reduced?0:Math.min(46,Math.max(24,Math.floor(W/17)));p=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H,r:.5+Math.random()*1.4,v:.08+Math.random()*.16,a:.08+Math.random()*.24,h:[188,255,330][Math.floor(Math.random()*3)]}))}
-function draw(){ctx.clearRect(0,0,W,H);ctx.globalCompositeOperation='lighter';for(const q of p){q.y-=q.v;if(q.y<-10){q.y=H+10;q.x=Math.random()*W}ctx.fillStyle=`hsla(${q.h},90%,75%,${q.a})`;ctx.beginPath();ctx.arc(q.x,q.y,q.r,0,Math.PI*2);ctx.fill()}ctx.globalCompositeOperation='source-over';requestAnimationFrame(draw)}
-addEventListener('resize',resize,{passive:true});resize();draw();
-
-function home(){progress(0);render(`<div class="wrap hero">
-  <div class="eyebrow">JUSTE POUR TOI</div>
-  <div class="hero-orb"><b>A</b></div>
-  <h1>Aline, joue trois fois.</h1>
-  <p>À la fin, tu comprendras l’essentiel de ce que Flo fabrique sur son ordinateur. <strong>Tu n’as rien à apprendre avant.</strong></p>
-  ${button('OK, MONTRE-MOI','start')}
-  <div class="micro">3 petits jeux · environ 2 minutes</div>
-</div>`);$('#start').onclick=async()=>{ok();await say('Promis : je te laisse regarder avant de t’expliquer. 😌',1600);game1()}}
+function home(){setProgress(0);render(`<div class="scene-card hero-card"><div class="scene-inner hero"><div class="kicker">Juste pour toi</div><div class="hero-art" aria-hidden="true"><div class="halo"></div><div class="ring"></div><div class="ring r2"></div><div class="core"><b>A</b></div></div><h1 class="title">Je vais te montrer ce que fait mon logiciel.</h1><p class="subtitle"><strong>3 mini-jeux.</strong> Rien à connaître avant de commencer.</p><div class="action-row">${button('COMMENCER','start')}</div><div class="micro">Environ 2 minutes</div></div></div>`);safeBind('start',async()=>{success();await wait(180);await transition(game1)})}
 
 const curves=[
-{label:'Ça monte fort… puis ça s’écroule',name:'Le spectaculaire',stroke:'#ff7891',path:'M5 140 C45 28,80 160,118 34 S175 166,225 50 S280 178,335 66'},
-{label:'Ça monte doucement, mais souvent',name:'Le régulier',stroke:'#75ffd3',path:'M5 145 C55 138,80 122,120 126 S180 102,215 106 S275 76,335 82'},
-{label:'Impossible de savoir ce qui arrive',name:'Les montagnes russes',stroke:'#f5c86c',path:'M5 105 L38 28 L70 158 L103 42 L137 148 L170 20 L204 150 L240 38 L275 130 L335 52'}
+{hint:'Ça part très fort… puis ça tombe.',name:'Spectaculaire',stroke:'#ff819d',path:'M4 54 C20 12,36 63,52 20 S84 62,100 18 S132 66,156 48'},
+{hint:'Ça monte doucement et régulièrement.',name:'Régulier',stroke:'#7df4c6',path:'M4 58 C30 55,38 49,55 50 S88 40,104 41 S136 30,156 31'},
+{hint:'Ça part dans tous les sens.',name:'Chaotique',stroke:'#f2c96e',path:'M4 41 L20 12 L36 61 L52 18 L68 57 L84 9 L100 59 L116 17 L132 52 L156 23'}
 ];
-function game1(){progress(1);render(`<div class="wrap game">
-  <div class="game-head"><small>1 / 3</small><h2>Lequel te paraît le plus fiable ?</h2><p>Ne regarde pas seulement qui gagne le plus. Regarde surtout la forme.</p></div>
-  <div class="arena"><div class="picks">${curves.map((c,i)=>`<button class="pick" data-pick="${i}" type="button"><div class="line"><svg viewBox="0 0 340 180" preserveAspectRatio="none"><path d="${c.path}" stroke="${c.stroke}"/></svg></div><div class="name"><small>${c.label}</small><b>${c.name}</b></div></button>`).join('')}</div></div>
-  <div id="answer"></div>
-</div>`);$$('[data-pick]').forEach(b=>b.onclick=()=>pick1(b))}
-async function pick1(b){const i=+b.dataset.pick;$$('[data-pick]').forEach(x=>x.disabled=true);b.classList.add(i===1?'good':'bad');$$('[data-pick]')[1].classList.add('good');if(i===1)ok();$('#answer').innerHTML=`<div class="answer"><b>${i===1?'Oui.':'Le plus fiable était celui du milieu.'}</b> Le logiciel préfère souvent quelque chose de régulier à un énorme coup de chance.<div class="tech">ÇA S’APPELLE : COPY‑VAULT</div></div><div class="actions">${button('JEU SUIVANT','next1')}</div>`;await say('Premier principe compris. Pas besoin d’aller plus loin pour l’instant.',1600);$('#next1').onclick=game2}
+function game1(){setProgress(1);render(`<div class="scene-card"><div class="scene-inner"><div class="game-head"><div class="kicker">1 sur 3</div><h2 class="title">Lequel te paraît le plus fiable ?</h2><p class="subtitle">Regarde juste la forme des courbes.</p></div><div class="play-stage"><div class="curve-list">${curves.map((c,i)=>`<button class="choice" data-choice="${i}" type="button" aria-label="${c.name} : ${c.hint}"><svg viewBox="0 0 160 70" preserveAspectRatio="none" aria-hidden="true"><path d="${c.path}" stroke="${c.stroke}"/></svg><small>${c.hint}</small><b>${c.name}</b></button>`).join('')}</div></div><div id="result" class="result empty" aria-live="polite"></div><div class="action-row" id="nextSlot"></div></div></div>`);$$('[data-choice]').forEach(el=>el.onclick=()=>chooseCurve(el))}
+function chooseCurve(el){if(state.locked)return;state.locked=true;const i=Number(el.dataset.choice);$$('[data-choice]').forEach(b=>b.disabled=true);el.classList.add(i===1?'correct':'wrong');const right=$$('[data-choice]')[1];right.classList.add('correct');const result=$('#result');result.classList.remove('empty');result.innerHTML=`<strong>${i===1?'Oui.':'Le plus fiable était le régulier.'}</strong><span>Le logiciel cherche surtout ce qui reste bon dans le temps.</span>`;$('#nextSlot').innerHTML=button('SUIVANT','g1next');success();state.locked=false;safeBind('g1next',async()=>transition(game2))}
 
-function game2(){progress(2);render(`<div class="wrap game">
- <div class="game-head"><small>2 / 3</small><h2>Regarde la ville A.</h2><p>Dès qu’elle s’allume, touche le bouton avant que la lumière atteigne B.</p></div>
- <div class="arena"><div class="cities"><div id="cityA" class="city"><label>VILLE A</label></div><div id="road" class="road"><i class="signal"></i></div><div id="cityB" class="city"><label>VILLE B</label></div></div><button id="go" class="primary big-action" type="button">LANCER</button></div>
- <div id="answer"></div>
- </div>`);$('#go').onclick=startLead}
-async function startLead(){if(state.leadOpen)return;const b=$('#go');b.disabled=true;b.textContent='REGARDE A…';await sleep(650+Math.random()*500);$('#cityA').classList.add('pulse');$('#road').classList.add('go');state.leadOpen=true;b.disabled=false;b.textContent='MAINTENANT !';b.onclick=()=>finishLead(true);leadTimer=setTimeout(()=>{if(state.leadOpen){$('#cityB').classList.add('hit');finishLead(false)}},1000)}
-async function finishLead(win){if(!state.leadOpen)return;state.leadOpen=false;clearTimeout(leadTimer);$('#go').disabled=true;if(win)ok();$('#answer').innerHTML=`<div class="answer"><b>${win?'Bien vu.':'L’onde est arrivée juste avant.'}</b> Tu viens de voir A bouger, puis B suivre un peu après.<div class="tech">ÇA S’APPELLE : LEAD‑LAG</div></div><div class="actions">${button('DERNIER JEU','next2')}</div>`;await say('C’est vraiment ça : le premier bouge, le second suit.',1600);$('#next2').onclick=game3}
+function game2(){setProgress(2);state.leadRound=0;render(`<div class="scene-card"><div class="scene-inner"><div class="game-head"><div class="kicker">2 sur 3</div><h2 class="title">Regarde A.</h2><p class="subtitle">Quand A s’allume, touche le bouton avant que la lumière arrive à B.</p></div><div class="play-stage signal-stage"><div class="nodes"><div id="nodeA" class="node">A</div><div id="track" class="track"><i class="signal"></i></div><div id="nodeB" class="node">B</div></div><div class="signal-action"><button id="leadBtn" class="primary" type="button">LANCER</button><div id="roundLabel" class="round-label">Essai 1 sur 2</div></div></div><div id="result" class="result empty" aria-live="polite"></div><div class="action-row" id="nextSlot"></div></div></div>`);$('#leadBtn').onclick=startLead}
+async function startLead(){if(state.leadActive||state.locked)return;state.locked=true;state.leadActive=true;const btn=$('#leadBtn');btn.disabled=true;btn.textContent='REGARDE A…';await wait(620+Math.floor(Math.random()*420));if(!document.body.contains(btn)){state.locked=false;state.leadActive=false;return}$('#nodeA').classList.add('pulse');const track=$('#track');track.classList.remove('go');void track.offsetWidth;track.classList.add('go');const started=performance.now();state.locked=false;btn.disabled=false;btn.textContent='MAINTENANT !';const timeout=later(()=>finishLead('late'),1050);btn.onclick=()=>{if(!state.leadActive)return;clearTimeout(timeout);timers.delete(timeout);const elapsed=performance.now()-started;finishLead(elapsed<90?'early':'good')}}
+function finishLead(kind){if(!state.leadActive)return;state.leadActive=false;state.locked=true;const btn=$('#leadBtn');btn.disabled=true;$('#nodeB').classList.toggle('hit',kind==='late');const result=$('#result');result.classList.remove('empty');const copy=kind==='good'?['Juste à temps.','Tu as vu A bouger avant que B ne réagisse.']:kind==='early'?['Très vite.','Tu as réagi presque au même instant que A.']:['Trop tard.','La lumière avait déjà atteint B.'];result.innerHTML=`<strong>${copy[0]}</strong><span>${copy[1]}</span>`;if(kind!=='late')success();state.leadRound+=1;if(state.leadRound<2){later(()=>{if(!document.body.contains(btn))return;$('#nodeA').classList.remove('pulse');$('#nodeB').classList.remove('hit');$('#track').classList.remove('go');btn.disabled=false;btn.textContent='REJOUER UNE FOIS';btn.onclick=startLead;$('#roundLabel').textContent='Essai 2 sur 2';state.locked=false},420)}else{$('#nextSlot').innerHTML=button('SUIVANT','g2next');state.locked=false;safeBind('g2next',async()=>transition(game3))}}
 
-function game3(){progress(3);render(`<div class="wrap game">
- <div class="game-head"><small>3 / 3</small><h2>Tu vois un gain de 2 €.</h2><p>Même objet. 100 € ici, 102 € là-bas. Bonne affaire ?</p></div>
- <div class="arena"><div class="net" id="net">+2,00 €</div><div class="shops"><div class="shop"><div class="product"><b>◇</b></div><div class="price">100 €</div></div><div class="arrow">→</div><div class="shop"><div class="product"><b>◇</b></div><div class="price">102 €</div></div></div><div class="costs" id="costs">${button('VÉRIFIER CE QU’IL RESTE','check')}</div></div>
- <div id="answer"></div>
- </div>`);$('#check').onclick=checkCosts}
-async function checkCosts(){const box=$('#costs'),net=$('#net');box.innerHTML='';const rows=[['Frais de transaction','−0,60 €'],['Prix qui bouge pendant l’achat','−0,80 €'],['Petit délai','−0,70 €']];let value=2;for(const [a,b] of rows){await sleep(450);box.insertAdjacentHTML('beforeend',`<div class="cost"><span>${a}</span><b>${b}</b></div>`);value-=Number(b.replace('−','').replace(' €','').replace(',','.'));net.textContent=(value>=0?'+':'')+value.toFixed(2).replace('.',',')+' €';net.style.color=value>0?'#79ffd2':'#ff849f';tone(300,.1)}await sleep(450);$('#answer').innerHTML=`<div class="answer"><b>Le gain a disparu.</b> Le logiciel ne regarde donc pas le joli +2 € du début. Il calcule ce qu’il reste vraiment à la fin.<div class="tech">ÇA S’APPELLE : CROSS‑VENUE</div></div><div class="actions">${button('J’AI COMPRIS','finish')}</div>`;await say('Et voilà. Troisième principe compris.',1400);$('#finish').onclick=finale}
+function game3(){setProgress(3);render(`<div class="scene-card"><div class="scene-inner"><div class="game-head"><div class="kicker">3 sur 3</div><h2 class="title">Tu vois +2 €.</h2><p class="subtitle">100 € ici, 102 € là-bas. Est-ce vraiment gagné ?</p></div><div class="play-stage price-stage"><div class="prices"><div class="price-box"><small>ICI</small><b>100 €</b></div><div class="arrow">→</div><div class="price-box"><small>LÀ-BAS</small><b>102 €</b></div></div><div class="net-box"><small>GAIN APPARENT</small><div id="net" class="net-value">+2,00 €</div></div><div id="costSpace" class="cost-space" aria-live="polite"><div class="cost" data-cost><span>Frais</span><b>−0,60 €</b></div><div class="cost" data-cost><span>Prix qui bouge</span><b>−0,80 €</b></div><div class="cost" data-cost><span>Délai</span><b>−0,70 €</b></div></div><div class="action-row">${button('VÉRIFIER','check')}</div></div><div id="result" class="result empty" aria-live="polite"></div><div class="action-row" id="nextSlot"></div></div></div>`);safeBind('check',checkCosts)}
+async function checkCosts(){const net=$('#net'),rows=$$('[data-cost]'),values=[1.40,.60,-.10];for(let i=0;i<rows.length;i++){rows[i].classList.add('show');net.textContent=(values[i]>=0?'+':'')+values[i].toFixed(2).replace('.',',')+' €';if(values[i]<0)net.style.color='var(--red)';if(!reduced)await wait(360)}const result=$('#result');result.classList.remove('empty');result.innerHTML='<strong>Le +2 € a disparu.</strong><span>Le logiciel calcule ce qu’il reste vraiment après les petits coûts.</span>';$('#nextSlot').innerHTML=button('TERMINER','g3next');safeBind('g3next',async()=>{success();await transition(finale)})}
 
-function finale(){progress(3);render(`<div class="wrap final">
-  <div class="eyebrow">C’EST TOUT.</div>
-  <h2>Tu viens de comprendre le cœur du logiciel.</h2>
-  <div class="summary"><div><b>①</b><small>Éviter de confondre talent et coup de chance.</small></div><div><b>②</b><small>Repérer quand quelque chose bouge juste avant autre chose.</small></div><div><b>③</b><small>Calculer ce qu’il reste vraiment après les petits coûts.</small></div></div>
-  <p>Derrière ces trois idées très simples, Flo fait tester au logiciel énormément de situations pour essayer d’éviter les pièges.</p>
-  <div class="love"><b>Petite anomalie détectée : ALINE ❤️</b><span>Le système indique qu’elle apparaît beaucoup trop souvent dans les pensées du propriétaire.</span></div>
-  ${button('REJOUER','replay')}
- </div>`,'love');$('#replay').onclick=home;setTimeout(()=>say('Maintenant, quand Flo prononcera “Lead‑Lag”, tu pourras au moins lever les yeux au ciel en sachant de quoi il parle. 😂❤️',3300),500)}
+function finale(){setProgress(3);render(`<div class="scene-card final-card"><div class="scene-inner final"><div class="kicker">C’est tout</div><h2 class="title">Tu viens de comprendre l’essentiel.</h2><div class="summary-list"><div class="summary-row"><span>1</span><div><b>Chercher ce qui reste régulier.</b><small>Pas juste le plus gros chiffre.</small></div></div><div class="summary-row"><span>2</span><div><b>Voir qui bouge en premier.</b><small>Et qui suit juste après.</small></div></div><div class="summary-row"><span>3</span><div><b>Vérifier ce qu’il reste vraiment.</b><small>Une fois les coûts retirés.</small></div></div></div><div class="names">LES VRAIS NOMS : COPY‑VAULT · LEAD‑LAG · CROSS‑VENUE</div><div class="love-line">Et voilà. Maintenant tu sais un peu mieux ce que Flo fabrique devant son ordinateur… et pourquoi il y passe autant de temps. ❤️</div><div class="action-row">${button('REJOUER','replay')}</div></div></div>`,{final:true});safeBind('replay',async()=>{state.leadRound=0;await transition(home)})}
+
+window.__V9_QA={build:BUILD,state,getMetrics:()=>({width:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,height:document.documentElement.clientHeight,scrollHeight:document.documentElement.scrollHeight,scene:state.step})};
 home();
 })();
