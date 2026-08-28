@@ -3,32 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#07080d">
+  <meta name="theme-color" content="#080808">
   <meta name="color-scheme" content="dark">
-  <meta name="build" content="V9-MASTER-QA3-20260823-2314">
-  <title>Pour Aline ✦</title>
-  <meta name="description" content="Trois mini-jeux pour comprendre simplement ce que Flo construit.">
-  <meta property="og:title" content="Pour Aline ✦">
-  <meta property="og:description" content="3 mini-jeux. 2 minutes. Rien à connaître avant de commencer.">
+  <meta name="build" content="V10-PREMIUM-20260828-2345">
+  <title>Pour Aline</title>
+  <meta name="description" content="Une démonstration interactive de ce que Flo construit.">
+  <meta property="og:title" content="Pour Aline">
+  <meta property="og:description" content="Je préfère te le montrer que te l’expliquer.">
   <meta property="og:type" content="website">
-  <style>
-    html,body{margin:0;min-height:100%;background:#07080d;color:#f7fbff}
-    .track{--travel:0px}.track.go .signal{animation-name:travelV9!important}@keyframes travelV9{0%{opacity:1;transform:translate3d(0,-50%,0) scale(.55)}100%{opacity:1;transform:translate3d(var(--travel),-50%,0) scale(1)}}
-    .cost[aria-hidden="true"]{visibility:hidden}.cost[aria-hidden="false"]{visibility:visible}
-    @media(max-width:380px){.scene{padding-left:9px!important;padding-right:9px!important;padding-bottom:calc(var(--safe-b) + 10px)!important}.scene-inner{padding:14px!important;gap:15px!important}.scene-card{border-radius:21px!important}.game-head{gap:6px!important}.game-head .title{font-size:clamp(30px,10.6vw,39px)!important}.subtitle{font-size:14px!important;line-height:1.42!important}.play-stage{min-height:286px!important;border-radius:19px!important}.curve-list{padding:10px!important;gap:8px!important}.choice{min-height:74px!important;padding:9px 8px 9px 88px!important;border-radius:15px!important}.choice svg{left:7px!important;top:9px!important;width:70px!important;height:50px!important}.choice small{font-size:12px!important}.choice b{font-size:15px!important}.result{min-height:78px!important;padding:12px 13px!important;font-size:14px!important}.nodes{grid-template-columns:62px minmax(0,1fr) 62px!important;gap:6px!important}.node{font-size:20px!important}.signal-stage{min-height:288px!important;padding:18px 8px!important;gap:26px!important}.primary{min-height:50px!important;padding:12px 17px!important}.price-stage{padding:16px 9px!important;gap:12px!important}.price-box{padding:14px 3px!important;border-radius:16px!important}.price-box small,.net-box small{font-size:14px!important}.price-box b{font-size:26px!important}.cost-space{min-height:120px!important;gap:5px!important}.cost{min-height:34px!important;font-size:14px!important;padding:7px 8px!important}.summary-row{grid-template-columns:34px minmax(0,1fr)!important;gap:9px!important;padding:10px!important}.summary-row span{width:34px!important;height:34px!important}.summary-row small{font-size:14px!important}.names{font-size:14px!important;letter-spacing:.06em!important}}
-    @media(max-height:650px){.scene{padding-top:calc(var(--safe-t) + 46px)!important;padding-bottom:calc(var(--safe-b) + 10px)!important}.scene-inner{gap:14px!important}.hero{gap:13px!important}.hero-art{width:min(155px,44vw)!important;margin:0!important}.hero .title{font-size:clamp(34px,8vh,48px)!important}.play-stage{min-height:270px!important}.signal-stage{min-height:270px!important;gap:22px!important}}
-    @media(prefers-reduced-motion:reduce){.track.go .signal{animation:none!important;opacity:1;transform:translate3d(var(--travel),-50%,0) scale(1)}}
-  </style>
-  <link rel="stylesheet" href="styles.css?v=V9-MASTER-QA3-20260823-2314">
+  <style>html,body{margin:0;min-height:100%;background:#080808;color:#f3f1ec}body{opacity:1}</style>
+  <link rel="stylesheet" href="styles.css?v=V10-PREMIUM-20260828-2345">
 </head>
 <body>
-  <div class="ambient" aria-hidden="true"><i></i><i></i><i></i></div>
-  <header id="miniHud" class="mini-hud hidden" aria-label="Progression">
-    <div class="progress-dots" aria-label="3 étapes"><i></i><i></i><i></i></div>
-    <button id="effectsToggle" class="icon-btn" type="button" aria-label="Réduire les effets" title="Effets visuels">✦</button>
-  </header>
+  <div class="backdrop" aria-hidden="true"><i></i><i></i></div>
   <main id="app"><section id="scene" class="scene" aria-live="polite"></section></main>
-  <div id="flash" class="flash" aria-hidden="true"></div>
-  <script src="game.js?v=V9-MASTER-QA3-20260823-2314" defer></script>
+  <script src="game.js?v=V10-PREMIUM-20260828-2345" defer></script>
 </body>
 </html>
