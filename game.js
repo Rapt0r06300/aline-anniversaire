@@ -1,40 +1,163 @@
 (()=>{'use strict';
-const BUILD='V9-MASTER-QA2-20260823-2308';
+const BUILD='V10-PREMIUM-20260828-2345';
 const $=s=>document.querySelector(s),$$=s=>Array.from(document.querySelectorAll(s));
-const scene=$('#scene'),hud=$('#miniHud'),flash=$('#flash'),effectsToggle=$('#effectsToggle');
+const scene=$('#scene');
 const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
-const state={step:0,locked:false,fluid:false,leadRound:0,leadActive:false};
 const timers=new Set();
+let locked=false;
+
 function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn()},ms);timers.add(id);return id}
 function wait(ms){return new Promise(resolve=>later(resolve,ms))}
-function clearTimers(){for(const id of timers)clearTimeout(id);timers.clear();state.leadActive=false;state.locked=false}
-function setProgress(n){state.step=n;hud.classList.toggle('hidden',n===0);$$('.progress-dots i').forEach((d,i)=>d.classList.toggle('on',i<n))}
-function render(html,{final=false}={}){clearTimers();document.body.classList.toggle('finale-mode',final);scene.innerHTML=`<div class="shell scene-in">${html}</div>`;window.scrollTo({top:0,behavior:'auto'});requestAnimationFrame(()=>scene.querySelector('button:not([disabled])')?.focus({preventScroll:true}))}
-function button(label,id='next'){return `<button class="primary" id="${id}" type="button">${label}</button>`}
-function success(){flash.classList.remove('on');void flash.offsetWidth;flash.classList.add('on');try{navigator.vibrate?.(12)}catch(_){}}
-function safeBind(id,fn){const el=$('#'+id);if(!el)return;el.onclick=async()=>{if(state.locked||el.disabled)return;state.locked=true;el.disabled=true;try{await fn()}finally{state.locked=false;if(document.body.contains(el))el.disabled=false}}}
-async function transition(fn){if(reduced){fn();return}scene.style.opacity='.48';scene.style.transform='translateY(4px)';await wait(180);scene.style.opacity='';scene.style.transform='';fn()}
-effectsToggle.onclick=()=>{state.fluid=!state.fluid;document.documentElement.classList.toggle('effects-fluid',state.fluid);effectsToggle.textContent=state.fluid?'·':'✦';effectsToggle.setAttribute('aria-label',state.fluid?'Réactiver les effets automatiques':'Réduire les effets')};
+function clearTimers(){for(const id of timers)clearTimeout(id);timers.clear();locked=false}
+function render(html){clearTimers();scene.innerHTML=`<div class="shell"><div class="view enter">${html}</div></div>`;window.scrollTo({top:0,behavior:'auto'});requestAnimationFrame(()=>scene.querySelector('button')?.focus({preventScroll:true}))}
+function action(label,id,secondary=false){return `<button class="${secondary?'text-action':'primary'}" id="${id}" type="button">${label}</button>`}
+function bind(id,fn){const el=$('#'+id);if(!el)return;el.onclick=async()=>{if(locked||el.disabled)return;locked=true;el.disabled=true;try{await fn()}finally{locked=false;if(document.body.contains(el))el.disabled=false}}}
+async function transition(next){if(reduced){next();return}scene.style.opacity='.28';scene.style.transform='translateY(5px)';await wait(220);scene.style.opacity='';scene.style.transform='';next()}
+function showInsight(html){const box=$('#insight');if(!box)return;box.innerHTML=html;box.classList.add('show')}
+function setActions(html){const box=$('#actions');if(box)box.innerHTML=html}
 
-function home(){setProgress(0);render(`<div class="scene-card hero-card"><div class="scene-inner hero"><div class="kicker">Juste pour toi</div><div class="hero-art" aria-hidden="true"><div class="halo"></div><div class="ring"></div><div class="ring r2"></div><div class="core"><b>A</b></div></div><h1 class="title">Je vais te montrer ce que fait mon logiciel.</h1><p class="subtitle"><strong>3 mini-jeux.</strong> Rien à apprendre avant.</p><div class="action-row">${button('COMMENCER','start')}</div><div class="micro">Environ 2 minutes</div></div></div>`);safeBind('start',async()=>{success();await wait(180);await transition(game1)})}
+function home(){render(`
+  <div class="home">
+    <div class="eyebrow">Pour Aline</div>
+    <div class="rule" aria-hidden="true"></div>
+    <h1 class="display">Je préfère te le montrer que te l’expliquer.</h1>
+    <p class="lead">Trois idées. Quelques secondes chacune. Rien à connaître avant.</p>
+    <div class="actions">${action('Voir','start')}</div>
+  </div>`);
+  bind('start',()=>transition(momentOne));
+}
 
-const curves=[
-{hint:'Ça part fort… puis ça tombe.',name:'Spectaculaire',stroke:'#ff819d',path:'M4 54 C20 12,36 63,52 20 S84 62,100 18 S132 66,156 48'},
-{hint:'Ça monte doucement.',name:'Régulier',stroke:'#7df4c6',path:'M4 58 C30 55,38 49,55 50 S88 40,104 41 S136 30,156 31'},
-{hint:'Ça part dans tous les sens.',name:'Chaotique',stroke:'#f2c96e',path:'M4 41 L20 12 L36 61 L52 18 L68 57 L84 9 L100 59 L116 17 L132 52 L156 23'}
-];
-function game1(){setProgress(1);render(`<div class="scene-card"><div class="scene-inner"><div class="game-head"><div class="kicker">1 sur 3</div><h2 class="title">Lequel semble le plus fiable ?</h2><p class="subtitle">Regarde juste les courbes.</p></div><div class="play-stage"><div class="curve-list">${curves.map((c,i)=>`<button class="choice" data-choice="${i}" type="button" aria-label="${c.name} : ${c.hint}"><svg viewBox="0 0 160 70" preserveAspectRatio="none" aria-hidden="true"><path d="${c.path}" stroke="${c.stroke}"/></svg><small>${c.hint}</small><b>${c.name}</b></button>`).join('')}</div></div><div id="result" class="result empty" aria-live="polite"></div><div class="action-row" id="nextSlot"></div></div></div>`);$$('[data-choice]').forEach(el=>el.onclick=()=>chooseCurve(el))}
-function chooseCurve(el){if(state.locked)return;state.locked=true;const i=Number(el.dataset.choice);$$('[data-choice]').forEach(b=>b.disabled=true);el.classList.add(i===1?'correct':'wrong');const right=$$('[data-choice]')[1];right.classList.add('correct');const result=$('#result');result.classList.remove('empty');result.innerHTML=`<strong>${i===1?'Oui.':'Le régulier était le plus fiable.'}</strong><span>Le logiciel préfère ce qui reste bon dans le temps.</span>`;$('#nextSlot').innerHTML=button('SUIVANT','g1next');success();state.locked=false;safeBind('g1next',async()=>transition(game2))}
+function momentOne(){render(`
+  <header class="section-head">
+    <div class="section-copy">
+      <div class="eyebrow">Régularité</div>
+      <h2 class="headline">Le plus impressionnant n’est pas toujours le plus intéressant.</h2>
+    </div>
+    <p class="lead">Regarde ce qui tient dans le temps.</p>
+  </header>
+  <div class="stage">
+    <div class="curves" aria-label="Trois trajectoires différentes">
+      <div class="curve" data-curve="spike">
+        <div><b>Très fort au début</b><small>Puis ça retombe.</small></div>
+        <svg viewBox="0 0 220 120" preserveAspectRatio="none" aria-hidden="true"><path d="M4 101 C30 92,38 18,62 14 S92 88,118 34 S153 96,216 89"/></svg>
+      </div>
+      <div class="curve" data-curve="stable">
+        <div><b>Moins spectaculaire</b><small>Mais ça tient.</small></div>
+        <svg viewBox="0 0 220 120" preserveAspectRatio="none" aria-hidden="true"><path d="M4 101 C28 97,42 89,62 88 S102 72,122 73 S164 53,216 45"/></svg>
+      </div>
+      <div class="curve" data-curve="noise">
+        <div><b>Très nerveux</b><small>Difficile à suivre.</small></div>
+        <svg viewBox="0 0 220 120" preserveAspectRatio="none" aria-hidden="true"><path d="M4 72 L28 18 L50 104 L76 30 L99 98 L124 14 L148 91 L174 27 L197 85 L216 49"/></svg>
+      </div>
+    </div>
+  </div>
+  <div id="insight" class="insight" aria-live="polite"></div>
+  <div id="actions" class="actions">${action('Voir ce que le logiciel retient','revealOne')}</div>`);
+  bind('revealOne',revealOne);
+}
 
-function game2(){setProgress(2);state.leadRound=0;render(`<div class="scene-card"><div class="scene-inner"><div class="game-head"><div class="kicker">2 sur 3</div><h2 class="title">Regarde A.</h2><p class="subtitle">A s’allume. Appuie avant que la lumière touche B.</p></div><div class="play-stage signal-stage"><div class="nodes"><div id="nodeA" class="node">A</div><div id="track" class="track"><i class="signal"></i></div><div id="nodeB" class="node">B</div></div><div class="signal-action"><button id="leadBtn" class="primary" type="button">LANCER</button><div id="roundLabel" class="round-label">Essai 1 sur 2</div></div></div><div id="result" class="result empty" aria-live="polite"></div><div class="action-row" id="nextSlot"></div></div></div>`);$('#leadBtn').onclick=startLead}
-async function startLead(){if(state.leadActive||state.locked)return;state.locked=true;state.leadActive=true;const btn=$('#leadBtn');btn.disabled=true;btn.textContent='REGARDE A…';await wait(620+Math.floor(Math.random()*420));if(!document.body.contains(btn)){state.locked=false;state.leadActive=false;return}$('#nodeA').classList.add('pulse');const track=$('#track');const signal=track.querySelector('.signal');const distance=Math.max(0,track.clientWidth-(signal?.offsetWidth||18));track.style.setProperty('--travel',`${distance}px`);track.classList.remove('go');void track.offsetWidth;track.classList.add('go');const started=performance.now();state.locked=false;btn.disabled=false;btn.textContent='MAINTENANT !';const timeout=later(()=>finishLead('late'),1050);btn.onclick=()=>{if(!state.leadActive)return;clearTimeout(timeout);timers.delete(timeout);const elapsed=performance.now()-started;finishLead(elapsed<90?'early':'good')}}
-function finishLead(kind){if(!state.leadActive)return;state.leadActive=false;state.locked=true;const btn=$('#leadBtn');btn.disabled=true;$('#nodeB').classList.toggle('hit',kind==='late');const result=$('#result');result.classList.remove('empty');const copy=kind==='good'?['Juste à temps.','A a bougé avant B.']:kind==='early'?['Très vite.','Tu as réagi presque avec A.']:['Trop tard.','La lumière avait déjà atteint B.'];result.innerHTML=`<strong>${copy[0]}</strong><span>${copy[1]}</span>`;if(kind!=='late')success();state.leadRound+=1;if(state.leadRound<2){later(()=>{if(!document.body.contains(btn))return;$('#nodeA').classList.remove('pulse');$('#nodeB').classList.remove('hit');$('#track').classList.remove('go');btn.disabled=false;btn.textContent='ENCORE UNE FOIS';btn.onclick=startLead;$('#roundLabel').textContent='Essai 2 sur 2';state.locked=false},420)}else{$('#nextSlot').innerHTML=button('SUIVANT','g2next');state.locked=false;safeBind('g2next',async()=>transition(game3))}}
+async function revealOne(){
+  $$('[data-curve]').forEach(el=>el.classList.toggle('dim',el.dataset.curve!=='stable'));
+  $('[data-curve="stable"]')?.classList.add('keep');
+  showInsight('<strong>Il garderait la trajectoire régulière.</strong> Moins spectaculaire, mais beaucoup plus fiable.');
+  setActions(action('Continuer','nextOne'));
+  bind('nextOne',()=>transition(momentTwo));
+}
 
-function game3(){setProgress(3);render(`<div class="scene-card"><div class="scene-inner"><div class="game-head"><div class="kicker">3 sur 3</div><h2 class="title">Tu vois +2 €.</h2><p class="subtitle">100 € ici. 102 € là-bas. Le gain est-il réel ?</p></div><div class="play-stage price-stage"><div class="prices"><div class="price-box"><small>ICI</small><b>100 €</b></div><div class="arrow">→</div><div class="price-box"><small>LÀ-BAS</small><b>102 €</b></div></div><div class="net-box"><small>GAIN APPARENT</small><div id="net" class="net-value">+2,00 €</div></div><div id="costSpace" class="cost-space" aria-live="polite"><div class="cost" data-cost aria-hidden="true"><span>Frais</span><b>−0,60 €</b></div><div class="cost" data-cost aria-hidden="true"><span>Prix qui bouge</span><b>−0,80 €</b></div><div class="cost" data-cost aria-hidden="true"><span>Délai</span><b>−0,70 €</b></div></div><div class="action-row">${button('VÉRIFIER','check')}</div></div><div id="result" class="result empty" aria-live="polite"></div><div class="action-row" id="nextSlot"></div></div></div>`);safeBind('check',checkCosts)}
-async function checkCosts(){const net=$('#net'),rows=$$('[data-cost]'),values=[1.40,.60,-.10];for(let i=0;i<rows.length;i++){rows[i].setAttribute('aria-hidden','false');rows[i].classList.add('show');net.textContent=(values[i]>=0?'+':'')+values[i].toFixed(2).replace('.',',')+' €';if(values[i]<0)net.style.color='var(--red)';if(!reduced)await wait(360)}const result=$('#result');result.classList.remove('empty');result.innerHTML='<strong>Le +2 € a disparu.</strong><span>Le logiciel calcule ce qu’il reste vraiment après les coûts.</span>';$('#nextSlot').innerHTML=button('TERMINER','g3next');safeBind('g3next',async()=>{success();await transition(finale)})}
+function momentTwo(){render(`
+  <header class="section-head">
+    <div class="section-copy">
+      <div class="eyebrow">Décalage</div>
+      <h2 class="headline">Parfois, le mouvement commence ailleurs.</h2>
+    </div>
+    <p class="lead">A bouge. B suit juste après.</p>
+  </header>
+  <div class="stage signal-wrap">
+    <div class="signal-row" aria-label="A précède B">
+      <div id="nodeA" class="signal-node">A</div>
+      <div id="signalLine" class="signal-line"><i class="signal-dot" aria-hidden="true"></i></div>
+      <div id="nodeB" class="signal-node">B</div>
+    </div>
+    <div class="signal-note">Le logiciel observe l’ordre et le délai.</div>
+  </div>
+  <div id="insight" class="insight" aria-live="polite"></div>
+  <div id="actions" class="actions">${action('Voir le décalage','revealTwo')}</div>`);
+  bind('revealTwo',revealTwo);
+}
 
-function finale(){setProgress(3);render(`<div class="scene-card final-card"><div class="scene-inner final"><div class="kicker">C’est tout</div><h2 class="title">Tu viens de comprendre l’essentiel.</h2><div class="summary-list"><div class="summary-row"><span>1</span><div><b>Chercher ce qui reste régulier.</b><small>Pas juste le plus gros chiffre.</small></div></div><div class="summary-row"><span>2</span><div><b>Voir qui bouge en premier.</b><small>Et qui suit juste après.</small></div></div><div class="summary-row"><span>3</span><div><b>Vérifier le vrai résultat.</b><small>Une fois les coûts retirés.</small></div></div></div><div class="names">LES VRAIS NOMS : COPY‑VAULT · LEAD‑LAG · CROSS‑VENUE</div><div class="love-line">Voilà. Maintenant tu sais un peu mieux ce que Flo fabrique devant son ordinateur. ❤️</div><div class="action-row">${button('REJOUER','replay')}</div></div></div>`,{final:true});safeBind('replay',async()=>{state.leadRound=0;await transition(home)})}
+async function revealTwo(){
+  const a=$('#nodeA'),b=$('#nodeB'),line=$('#signalLine'),dot=line?.querySelector('.signal-dot');
+  if(!a||!b||!line||!dot)return;
+  const travel=Math.max(0,line.clientWidth-dot.offsetWidth);
+  line.style.setProperty('--travel',`${travel}px`);
+  a.classList.add('pulse');
+  line.classList.add('running');
+  if(!reduced)await wait(650);
+  if(!document.body.contains(b))return;
+  b.classList.add('pulse');
+  if(!reduced)await wait(280);
+  showInsight('<strong>Le petit retard entre A et B est l’information.</strong> Le logiciel essaie de repérer ce genre de décalage avant qu’il disparaisse.');
+  setActions(action('Continuer','nextTwo'));
+  bind('nextTwo',()=>transition(momentThree));
+}
 
-window.__V9_QA={build:BUILD,state,getMetrics:()=>({width:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,height:document.documentElement.clientHeight,scrollHeight:document.documentElement.scrollHeight,scene:state.step})};
+function momentThree(){render(`
+  <header class="section-head">
+    <div class="section-copy">
+      <div class="eyebrow">Résultat réel</div>
+      <h2 class="headline">Le chiffre affiché n’est pas le résultat.</h2>
+    </div>
+    <p class="lead">100 € ici. 102 € ailleurs. À première vue : +2 €.</p>
+  </header>
+  <div class="stage price-stage">
+    <div class="price-row">
+      <div class="price"><small>Ici</small><b>100 €</b></div>
+      <div class="price-arrow" aria-hidden="true">→</div>
+      <div class="price"><small>Ailleurs</small><b>102 €</b></div>
+    </div>
+    <div class="net"><small>Résultat apparent</small><strong id="net">+2,00 €</strong></div>
+    <div class="costs" aria-live="polite">
+      <div class="cost" data-cost aria-hidden="true"><span>Frais</span><b>−0,60 €</b></div>
+      <div class="cost" data-cost aria-hidden="true"><span>Prix qui bouge</span><b>−0,80 €</b></div>
+      <div class="cost" data-cost aria-hidden="true"><span>Délai</span><b>−0,70 €</b></div>
+    </div>
+  </div>
+  <div id="insight" class="insight" aria-live="polite"></div>
+  <div id="actions" class="actions">${action('Voir ce qu’il reste','revealThree')}</div>`);
+  bind('revealThree',revealThree);
+}
+
+async function revealThree(){
+  const net=$('#net');
+  const rows=$$('[data-cost]');
+  const values=['+1,40 €','+0,60 €','−0,10 €'];
+  for(let i=0;i<rows.length;i++){
+    rows[i].setAttribute('aria-hidden','false');
+    rows[i].classList.add('show');
+    if(net)net.textContent=values[i];
+    if(!reduced)await wait(320);
+  }
+  showInsight('<strong>Le +2 € a disparu.</strong> C’est pour ça que le logiciel ne s’arrête jamais au chiffre le plus séduisant.');
+  setActions(action('Continuer','nextThree'));
+  bind('nextThree',()=>transition(finale));
+}
+
+function finale(){render(`
+  <div class="final">
+    <div class="eyebrow">En bref</div>
+    <h2 class="display">Trois idées. C’est essentiellement ça.</h2>
+    <div class="final-lines">
+      <div class="final-line">Repérer ce qui tient.</div>
+      <div class="final-line">Voir ce qui bouge d’abord.</div>
+      <div class="final-line">Vérifier ce qui reste vraiment.</div>
+    </div>
+    <div class="technical">En technique : Copy‑Vault · Lead‑Lag · Cross‑Venue</div>
+    <p class="personal">Je voulais te le montrer comme ça, sans te faire subir vingt minutes de jargon. <span class="signature">— Flo</span></p>
+    <div class="actions">${action('Revoir','replay',true)}</div>
+  </div>`);
+  bind('replay',()=>transition(home));
+}
+
+window.__ALINE_V10__={build:BUILD,getMetrics:()=>({width:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth,height:document.documentElement.clientHeight,scrollHeight:document.documentElement.scrollHeight})};
 home();
 })();
